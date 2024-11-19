@@ -12,6 +12,7 @@
 #include "Lib\SDL2\include\SDL.h"
 #include "Lib\glew\include\GL\glew.h"
 #include "Lib\glm\glm.hpp"
+#include <string>
 #include "intrin.h"
 
 
@@ -19,29 +20,29 @@ using namespace std;
 
 class Timer {
 	std::uint64_t tp;
+	std::string title;
 public:
-	Timer() {
-		tp = get_time_stamp();
+	Timer(const char* name = "") : tp(now()),title(name){
 	}
 	
 	void reset(){
-		tp = get_time_stamp();
+		tp = now();
 	}
 	
 	std::uint64_t elapsed() const{
-		return get_time_stamp() - tp;
+		return now() - tp;
 	}
 
 	~Timer() {
-		std::cout << get_time_stamp() - tp << "ms." << std::endl;
+		std::cout <<title<<":"<< now( ) - tp << "ms." << std::endl;
 	}
 
-	std::uint64_t get_time_stamp() const {
+	std::uint64_t now() const {
 		return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 	}
 	
 	std::uint64_t duration() const {
-		return get_time_stamp() - tp;
+		return now() - tp;
 	}	
 	
 };
@@ -73,6 +74,7 @@ void check_error(int line)
 #define check(x) check_error(__LINE__)
 GLuint create_shader(GLenum type,const char* source)
 {
+	Timer t(__func__);
 	GLuint shader=glCreateShader(type);
 	glShaderSource(shader,1,&source,nullptr);
 	
@@ -90,6 +92,7 @@ GLuint create_shader(GLenum type,const char* source)
 
 GLuint create_program(const char* vpath,const char* fpath)
 {
+	Timer t(__func__);
 	char* vsource = (char*)SDL_LoadFile(vpath,nullptr);
 	char* fsource = (char*)SDL_LoadFile(fpath,nullptr);
 	
@@ -176,7 +179,6 @@ int main(int, char**)
 	glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,12,0);
 	glBindVertexArray(0);
 	
-	
 	glGenVertexArrays(1,&circle_vao);
 	glBindVertexArray(circle_vao);
 	
@@ -211,11 +213,9 @@ int main(int, char**)
 	glVertexAttribPointer(1,1,GL_FLOAT,GL_FALSE,16,(void*)12);
 	glBindVertexArray(0);
 	
-	
 	GLuint program = create_program("simple.vert","simple.frag");
 	GLuint circle_program = create_program("circle.vert","circle.frag");
 	GLuint multi = create_program("multi.vert","multi.frag");
-	
 	
 	
 	glm::ivec2 winSize;
@@ -259,7 +259,7 @@ int main(int, char**)
 			if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_v)
 			{
 				std::cout<<"swap\n";
-				SDL_GL_SetSwapInterval( SDL_GL_GetSwapInterval() == 1?0:1 );
+				SDL_GL_SetSwapInterval( !SDL_GL_GetSwapInterval() );
 			}
 			if(event.type == SDL_WINDOWEVENT)
 			{
